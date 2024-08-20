@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name : 비스타 
+  profiles:
+    active: company
+  cache:
+    type: simple
+logging: 
+  level:
+    root: INFO
+    com.youn.vista: DEBUG
+  file: 
+    neme: ../logs/application.log
+  logback:
+    rollingpolicy:
+      file-name-pattern: ../logs/application-%d{yyyy-MM-dd}.%i.log
+      max-file-size: 10MB
+      max-history: 30
+
+
