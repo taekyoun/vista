@@ -9,6 +9,7 @@ public class NewsDto {
 
     private String id;
     private String title;
+    private String description;
     private String content;
     private String linkUrl;
     private String date;

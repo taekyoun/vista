@@ -5,7 +5,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,9 +25,9 @@ import com.google.gson.JsonParser;
 import com.youn.vista.domain.analsis.dto.KeywordAnalsisDto;
 import com.youn.vista.domain.analsis.dto.KeywordDto;
 import com.youn.vista.domain.analsis.dto.NewsDto;
-import com.youn.vista.domain.analsis.entity.WordSentiment;
 import com.youn.vista.domain.analsis.repository.WordSentimentRepository;
 import com.youn.vista.domain.analsis.service.KeywordAnalsisService;
+import com.youn.vista.domain.analsis.utility.WebCrawling;
 
 import kr.co.shineware.nlp.komoran.constant.DEFAULT_MODEL;
 import kr.co.shineware.nlp.komoran.core.Komoran;
@@ -40,6 +39,9 @@ import lombok.RequiredArgsConstructor;
 public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
     
     private final WordSentimentRepository wordSentimentRepository;
+    private final WebCrawling<NewsDto> webCrawling;
+
+  
 
     @Override
     @Cacheable("newsData")
@@ -77,7 +79,7 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
 
                     newList.add(NewsDto.builder()
                                     .title(title)
-                                    .content(description)
+                                    .description(description)
                                     .linkUrl(link)
                                     .date(pubDate)
                                     .id(""+i)
@@ -92,11 +94,15 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
     }
 
     @Override
+    @Cacheable("keywordData")
     public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList) {
+        newsList.stream().map(dto->
+            webCrawling.start(dto.getLinkUrl(), dto)
+        ).toList();
+        
         Komoran komoran = new Komoran(DEFAULT_MODEL.LIGHT);
-
-        List<Token> allTokens = newsList.stream().
-            flatMap(newsDto -> komoran.analyze(newsDto.getContent()).getTokenList().stream())
+        List<Token> allTokens = newsList.stream()
+            .flatMap(newsDto -> komoran.analyze(newsDto.getContent()).getTokenList().stream())
             .filter(token -> "NNG".equals(token.getPos()))
             .collect(Collectors.toList());
 
@@ -109,22 +115,36 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
                 .count(entry.getValue())
                 .build())
             .collect(Collectors.toList());
-        runKeywordAnalsis(keywordInfoList);
-        return keywordInfoList;
+       
+        return  runKeywordAnalsis(keywordInfoList);
     }
 
     @Override
     @Transactional
-    public void runKeywordAnalsis(List<KeywordDto> keywordList) {
+    public List<KeywordDto> runKeywordAnalsis(List<KeywordDto> keywordList) {
         HashMap<String,String> wordSentimentMap = new HashMap<>();
         wordSentimentRepository.findAll().forEach(wordSentiment->{
             wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
         });
 
-        keywordList.forEach(keywordDto->{
-            keywordDto.setSentiment(wordSentimentMap.getOrDefault(keywordDto.getKeyword(),"none"));
-        });
-     
+        return keywordList.stream()
+            .map(keywordDto -> {
+                String sentimentCode = wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword");
+                switch (sentimentCode) {
+                    case "DIC02":
+                        keywordDto.setSentiment("긍정");
+                        break;
+                    case "DIC03":
+                        keywordDto.setSentiment("부정");
+                        break;
+                    default:
+                        keywordDto.setSentiment(sentimentCode);
+                        break;
+                }
+                return keywordDto;
+            })
+            .filter(dto -> !"DIC01".equals(dto.getSentiment()))
+            .toList();
     }
 
     @Override

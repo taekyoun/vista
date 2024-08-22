@@ -12,7 +12,7 @@ public interface KeywordAnalsisService {
 
     public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList);
 
-    public void runKeywordAnalsis(List<KeywordDto> keywordList);
+    public List<KeywordDto> runKeywordAnalsis(List<KeywordDto> keywordList);
 
     public KeywordAnalsisDto getKeywordAnalsis();
 
