@@ -7,6 +7,7 @@ import lombok.Data;
 @Builder
 public class KeywordDto {
 
+    String originId;
     String keyword;
     Long count;
     String sentiment;

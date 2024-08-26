@@ -2,11 +2,14 @@ package com.youn.vista.domain.analsis.utility;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.concurrent.CompletableFuture;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
 
 @Component
 public class WebCrawling<T> {
@@ -19,6 +22,12 @@ public class WebCrawling<T> {
         setField(dto, "content", content);
         return dto;
        
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<T> crawlNews(String url, T dto) {
+        T newDto = start(url, dto); // 크롤링 작업
+        return CompletableFuture.completedFuture(newDto);
     }
 
     private String fetchContent(String url) {

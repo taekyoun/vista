@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.apache.http.HttpEntity;
@@ -16,6 +17,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +29,9 @@ import com.youn.vista.domain.analsis.dto.KeywordDto;
 import com.youn.vista.domain.analsis.dto.NewsDto;
 import com.youn.vista.domain.analsis.repository.WordSentimentRepository;
 import com.youn.vista.domain.analsis.service.KeywordAnalsisService;
+import com.youn.vista.domain.analsis.utility.KeywordAnalyzer;
 import com.youn.vista.domain.analsis.utility.WebCrawling;
 
-import kr.co.shineware.nlp.komoran.constant.DEFAULT_MODEL;
-import kr.co.shineware.nlp.komoran.core.Komoran;
 import kr.co.shineware.nlp.komoran.model.Token;
 import lombok.RequiredArgsConstructor;
 
@@ -40,6 +41,7 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
     
     private final WordSentimentRepository wordSentimentRepository;
     private final WebCrawling<NewsDto> webCrawling;
+    private final KeywordAnalyzer keywordAnalyzer;
 
   
 
@@ -83,7 +85,7 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
                                     .linkUrl(link)
                                     .date(pubDate)
                                     .id(""+i)
-                                .build());
+                                    .build());
                 }
             }
         }
@@ -95,39 +97,23 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
 
     @Override
     @Cacheable("keywordData")
-    public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList) {
-        newsList.stream().map(dto->
-            webCrawling.start(dto.getLinkUrl(), dto)
-        ).toList();
-        
-        Komoran komoran = new Komoran(DEFAULT_MODEL.LIGHT);
-        List<Token> allTokens = newsList.stream()
-            .flatMap(newsDto -> komoran.analyze(newsDto.getContent()).getTokenList().stream())
-            .filter(token -> "NNG".equals(token.getPos()))
-            .collect(Collectors.toList());
-
-        Map<String, Long> keywordCounts = allTokens.stream()
-            .collect(Collectors.groupingBy(Token::getMorph, Collectors.counting()));
-            
-        List<KeywordDto> keywordInfoList = keywordCounts.entrySet().stream()
-            .map(entry -> KeywordDto.builder()
-                .keyword(entry.getKey())
-                .count(entry.getValue())
-                .build())
-            .collect(Collectors.toList());
-       
-        return  runKeywordAnalsis(keywordInfoList);
-    }
-
-    @Override
     @Transactional
-    public List<KeywordDto> runKeywordAnalsis(List<KeywordDto> keywordList) {
+    public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList) {
         HashMap<String,String> wordSentimentMap = new HashMap<>();
         wordSentimentRepository.findAll().forEach(wordSentiment->{
             wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
         });
 
-        return keywordList.stream()
+        List<KeywordDto> keywordList = newsList.stream()
+            .map(dto->webCrawling.start(dto.getLinkUrl(), dto))
+            .flatMap(newsDto-> keywordAnalyzer.analyze(newsDto.getContent())
+                .entrySet().stream()
+                .map(entry -> KeywordDto.builder()
+                    .originId(newsDto.getId())
+                    .keyword(entry.getKey())
+                    .count(entry.getValue())
+                    .build())
+            )
             .map(keywordDto -> {
                 String sentimentCode = wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword");
                 switch (sentimentCode) {
@@ -145,7 +131,71 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
             })
             .filter(dto -> !"DIC01".equals(dto.getSentiment()))
             .toList();
+        
+    
+        return  keywordList;
     }
+
+   
+
+  
+
+    @Override
+    @Transactional
+    @Cacheable("keywordData")
+    public List<KeywordDto> processKeywordsAsync(List<NewsDto> newsList) {
+        HashMap<String,String> wordSentimentMap = new HashMap<>();
+        wordSentimentRepository.findAll().forEach(wordSentiment->{
+            wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
+        });
+        List<CompletableFuture<List<KeywordDto>>> futures = newsList.stream()
+            .map(dto -> webCrawling.crawlNews(dto.getLinkUrl(), dto) // 크롤링 비동기 호출
+                .thenCompose(newsDto -> {
+                    System.out.println("Crawling finished for URL: " + dto.getLinkUrl() + ", starting analysis...");
+                    // 크롤링이 완료된 후에 형태소 분석을 비동기적으로 호출
+                    return keywordAnalyzer.analyzeContent(newsDto.getContent())
+                        .thenApply(keywordMap -> {
+                            System.out.println("Combining results for ID: " + newsDto.getId());
+                            return keywordMap.entrySet().stream()
+                                .map(entry -> KeywordDto.builder()
+                                    .originId(newsDto.getId())
+                                    .keyword(entry.getKey())
+                                    .count(entry.getValue())
+                                    .build())
+                                .collect(Collectors.toList());
+                        });
+                }))
+            .collect(Collectors.toList());
+
+        return futures.parallelStream()
+            .flatMap(future -> {
+                try {
+                    return future.get().stream();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .map(keywordDto -> {
+                String sentimentCode = wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword");
+                switch (sentimentCode) {
+                    case "DIC02":
+                        keywordDto.setSentiment("긍정");
+                        break;
+                    case "DIC03":
+                        keywordDto.setSentiment("부정");
+                        break;
+                    default:
+                        keywordDto.setSentiment(sentimentCode);
+                        break;
+                }
+                return keywordDto;
+            })
+            .filter(dto -> !"DIC01".equals(dto.getSentiment()))
+            .collect(Collectors.toList());
+    }
+
+
+
 
     @Override
     public KeywordAnalsisDto getKeywordAnalsis() {

@@ -53,7 +53,7 @@ public class KeywordAnalsisController {
                 resultList = newsList;
                 break;
             case info:
-                resultList = keywordAnalsisService.getKeywordInfo(newsList);
+                resultList = keywordAnalsisService.processKeywordsAsync(newsList);
                 break;
             default:
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)

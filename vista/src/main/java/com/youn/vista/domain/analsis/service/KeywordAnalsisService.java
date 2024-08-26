@@ -12,8 +12,10 @@ public interface KeywordAnalsisService {
 
     public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList);
 
-    public List<KeywordDto> runKeywordAnalsis(List<KeywordDto> keywordList);
+    public List<KeywordDto> processKeywordsAsync(List<NewsDto> newsList);
 
     public KeywordAnalsisDto getKeywordAnalsis();
+
+    
 
 }
