@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation} from 'react-router-dom';
+import axios from 'axios';
 
-const menuList =[
-    {title:'기본페이지',path:'/', subMenu :null},
-    {title:'분석페이지',path:null, subMenu:[
-        {title:'키워드분석',path:'/analsis/keywordAnalsis', subMenu :null},
-        {title:'지도분석',path:'/analsis/mapAnalsis', subMenu :null}
-    ]}
-];
+let menuList =[];
+try{
+    const {data} = await axios.get(`/api/menu/use`);
+    console.log(data)
+    if(data) menuList =data;
+  
+} catch (err){
+    console.log('메뉴정보를 가져오는데 실패하였습니다')
+}
 
 const findPageTitle = (menus, currentPath) => {
     for (const menu of menus) {
@@ -27,26 +30,22 @@ const findPageTitle = (menus, currentPath) => {
 const PageTitle = () => {
     const location = useLocation();
     const currentPath = location.pathname;
-
+ 
     // 현재 경로에 맞는 제목 찾기
     const pageTitle = findPageTitle(menuList, currentPath) 
-
     return <h1>{pageTitle}</h1>;
 };
 const MenuItem = ({ item }) => {
     const [isOpen, setIsOpen] = useState(false);
     const handleMouseEnter = () => setIsOpen(true);
     const handleMouseLeave = () => setIsOpen(false);
-
     return (
-        <li
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-        >
+       <div onMouseEnter={handleMouseEnter}  
+            onMouseLeave={handleMouseLeave}>
             {item.subMenu ? (
-                <span>{item.title}</span>
+                <span>{item.name}</span>
             ) : (
-                <Link to={item.path || '#'}>{item.title}</Link>
+                <Link to={item.path || '#'}>{item.name}</Link>
             )}
             {item.subMenu && isOpen && (
                 <ul>
@@ -57,17 +56,27 @@ const MenuItem = ({ item }) => {
                     ))}
                 </ul>
             )}
-        </li>
+       </div>
     );
 };
-const Menu = () => {
+const Menu = (props) => {
+    let viewMenuList =[];
+    if(menuList.length>0){
+        viewMenuList =props.sort ==='admin'?
+            menuList.filter(menu=>menu.path.startsWith('/admin')):
+            menuList.filter(menu=>!menu.path.startsWith('/admin'));
+    }
     return (
-            <ul className='menu-item'>
-                {menuList.map((item, index) => (
-                    <MenuItem key={index} item={item} />
-                ))}
-            </ul>
+        <ul className={props.menuClass} >
+            {viewMenuList.map((item, index) => (
+                <li key={index}>
+                    <MenuItem item={item} />
+                </li>
+            ))}
+        </ul>
     );
 };
+
+
 
 export {Menu,PageTitle}

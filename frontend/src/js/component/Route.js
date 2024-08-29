@@ -1,8 +1,9 @@
 import {lazy} from 'react';
 import { Route, Routes,useLocation} from 'react-router-dom';
 
-const KeywordAnalsis = lazy(() => import  ('domain/analsis/keywordAnalsis'));
-const MapAnalsis = lazy(() => import  ('domain/analsis/mapAnalsis'));
+const KeywordAnalsis = lazy(() => import  ('js/domain/analsis/KeywordAnalsis'));
+const MapAnalsis = lazy(() => import  ('js/domain/analsis/MapAnalsis'));
+const MenuMng = lazy(() => import  ('js/domain/admin/MenuMng'));
 
 const BasicPage = ()=>{
     return (
@@ -12,8 +13,9 @@ const BasicPage = ()=>{
 
 const componentMap = {
     '/': BasicPage,
-    '/analsis/keywordAnalsis': KeywordAnalsis,
-    '/analsis/mapAnalsis': MapAnalsis,
+    '/analsis/KeywordAnalsis': KeywordAnalsis,
+    '/analsis/MapAnalsis': MapAnalsis,
+    '/admin/MenuMng': MenuMng,
     // Add more mappings here
 };
 

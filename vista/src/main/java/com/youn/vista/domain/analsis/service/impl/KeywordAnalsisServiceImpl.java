@@ -6,7 +6,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -17,7 +16,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +30,6 @@ import com.youn.vista.domain.analsis.service.KeywordAnalsisService;
 import com.youn.vista.domain.analsis.utility.KeywordAnalyzer;
 import com.youn.vista.domain.analsis.utility.WebCrawling;
 
-import kr.co.shineware.nlp.komoran.model.Token;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -132,13 +129,8 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
             .filter(dto -> !"DIC01".equals(dto.getSentiment()))
             .toList();
         
-    
         return  keywordList;
     }
-
-   
-
-  
 
     @Override
     @Transactional
@@ -149,22 +141,19 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
             wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
         });
         List<CompletableFuture<List<KeywordDto>>> futures = newsList.stream()
-            .map(dto -> webCrawling.crawlNews(dto.getLinkUrl(), dto) // 크롤링 비동기 호출
-                .thenCompose(newsDto -> {
-                    System.out.println("Crawling finished for URL: " + dto.getLinkUrl() + ", starting analysis...");
-                    // 크롤링이 완료된 후에 형태소 분석을 비동기적으로 호출
-                    return keywordAnalyzer.analyzeContent(newsDto.getContent())
-                        .thenApply(keywordMap -> {
-                            System.out.println("Combining results for ID: " + newsDto.getId());
-                            return keywordMap.entrySet().stream()
+            .map(dto -> webCrawling.crawlNews(dto.getLinkUrl(), dto) 
+                .thenCompose(newsDto -> 
+                    keywordAnalyzer.analyzeContent(newsDto.getContent())
+                        .thenApply(keywordMap -> 
+                            keywordMap.entrySet().stream()
                                 .map(entry -> KeywordDto.builder()
                                     .originId(newsDto.getId())
                                     .keyword(entry.getKey())
                                     .count(entry.getValue())
                                     .build())
-                                .collect(Collectors.toList());
-                        });
-                }))
+                                .collect(Collectors.toList())
+                        )
+                ))
             .collect(Collectors.toList());
 
         return futures.parallelStream()
@@ -193,9 +182,6 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
             .filter(dto -> !"DIC01".equals(dto.getSentiment()))
             .collect(Collectors.toList());
     }
-
-
-
 
     @Override
     public KeywordAnalsisDto getKeywordAnalsis() {

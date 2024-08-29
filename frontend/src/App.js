@@ -1,30 +1,20 @@
-import React, { Suspense} from 'react';
-import { BrowserRouter as Router} from 'react-router-dom';
-import {Menu, PageTitle} from 'component/menu';
-import ComponentRoute from 'component/route';
+import React from 'react';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import Admin from 'js/tiles/Admin';
+import Portal from 'js/tiles/Portal';
 
-const Tiles = ()=> {
+
+
+
+const App = () => {
     return (
-        <React.Fragment>
-            <header><PageTitle/></header>
-                <nav>
-                  <Menu />
-                </nav>
-                <div class='content_body'>
-                        <Suspense fallback={<div>로딩 중...</div>}>
-                            <ComponentRoute />
-                        </Suspense>
-                </div>
-            <footer></footer>
-        </React.Fragment>
-    )
-}
-
-const App = () => (
-    <Router>
-        <Tiles />
-    </Router>
-);
-
+        <Router>
+            <Routes>
+                    <Route path='/admin/*' element={<Admin/>}></Route>
+                    <Route path='*' element={<Portal/>}></Route>
+            </Routes>
+        </Router>
+    )    
+};
 export default App
 

@@ -1,38 +1,35 @@
-html *{
-    padding: 0;
-    margin: 0;
-}
-
-header{
+.header{
     height: 180px;
-    background-color: aqua;
+    background-color: beige;
 }
-nav{
+.nav{
     padding: 0px 10px;
     height: 40px;
-    background-color: bisque;
+    background-color:  blue;
     display: flex;
     font-size: 24px;
 }
-nav *{
+.nav *{
     text-decoration: none;
     z-index: 1000;
+    color: #fff;
 }
 .content_body{
     min-height: 500px;
     background-color: aquamarine;
+    padding: 50px 40px;
 }
-footer{
+.footer{
     height: 100px;
     background-color: black;
 }
 
-.menu-item {
+.menu_item {
     display: flex;
     list-style: none;
     gap: 30px;
 }
-.menu-item *{
+.menu_item * {
     list-style: none;
     gap: 30px;
 }
