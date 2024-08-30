@@ -5,7 +5,6 @@ import axios from 'axios';
 let menuList =[];
 try{
     const {data} = await axios.get(`/api/menu/use`);
-    console.log(data)
     if(data) menuList =data;
   
 } catch (err){

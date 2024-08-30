@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTable, useExpanded  } from 'react-table';
 import style from 'css/component/Table.module.css'
-const Table = ({ columns, data, onEdit, onDelete  }) => {
+const Table = ({ columns, data}) => {
     const {
         getTableProps,
         getTableBodyProps,

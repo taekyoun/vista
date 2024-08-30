@@ -4,44 +4,50 @@ import Modal from 'react-modal'
 import Table from 'js/component/Table'
 import 'css/domain/admin/MenuMng.css'
 
+
+
 const  MenuMng = () => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [search, setSearch] = useState('');
-    const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [data, setData] = useState([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    const openModal = () => {
-      setModalIsOpen(true);
-    };
-  
-    const closeModal = () => {
-      setModalIsOpen(false);
-    };
+  const fetchAllMenuInfo = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/menu/all');
+      setData(response.data);
+    } catch (error) {
+      setError(error);  
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchAllMenuInfo();
+  }, []); 
 
-  
-    // useEffect를 사용하여 컴포넌트가 처음 렌더링될 때만 데이터를 가져옴
-    useEffect(() => {
-        const fetchAllMenuInfo = async () => {
-          setError(null);
-          setLoading(true);
-          try {
-            const response = await axios.get('/api/menu/all', {
-              params: {
-                search: search,
-              },
-            });
-            setData(response.data);
-          } catch (error) {
-            setError(error);
-          } finally {
-            setLoading(false);
-          }
-        };
-    
-        fetchAllMenuInfo();
-    }, [search]); // search 상태가 변경될 때마다 데이터 새로고침
-    
+  const openModal = () => {
+    setModalIsOpen(true);
+  };
+  return (
+    <div className='table_area' >
+        <fieldset>
+            <label>
+              검색
+              <input type='text'/>
+              <button onClick={openModal} className="open-modal-button">메뉴생성</button>
+            </label>
+        </fieldset>
+        <MenuTable error={error} loading={loading} data={data}/>
+        <CreateMenuModal modalIsOpen={modalIsOpen} setModalIsOpen={setModalIsOpen} />
+    </div>
+  )
+}
+
+const  MenuTable = ({error,loading,data}) => {
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error.message}</p>;
 
@@ -101,21 +107,10 @@ const  MenuMng = () => {
           ),
         }
       ];
-
     return (
-        <div className='table_area' >
-            <fieldset>
-                
-                <label>
-                  검색
-                  <input type='text'/>
-                  <button onClick={openModal} className="open-modal-button">메뉴생성</button>
-                </label>
-            </fieldset>
-            <Table columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
-            <CreateMenuModal modalIsOpen={modalIsOpen} closeModal={closeModal} />
-        </div>
+      <Table columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
     )
+   
 }
 
 const handleEdit = (rowData) => {
@@ -130,13 +125,17 @@ const handleDelete = (rowData) => {
   }
 };
 
-const CreateMenuModal = ({ modalIsOpen, closeModal }) => {
+const CreateMenuModal = ({ modalIsOpen, setModalIsOpen }) => {
   const [menuName, setMenuName] = useState('');
   const [comment, setComment] = useState('');
   const [path, setPath] = useState('');
   const [upperMenu, setUpperMenu] = useState('');
   const [order, setOrder] = useState('');
   const [isActive, setIsActive] = useState('true');
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -154,11 +153,7 @@ const CreateMenuModal = ({ modalIsOpen, closeModal }) => {
     try {
       console.log(menuData)
       // 서버에 요청 보내기
-      const response = await axios.post('/api/menu', menuData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.post('/api/menu', menuData);
 
       if (response.status === 200) {
         console.log('Menu created successfully');
