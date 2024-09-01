@@ -12,5 +12,5 @@ public interface MenuService {
 
     public void updateMenu(MenuDto menuDto);
 
-    public void deleteMenu(MenuDto menuDto);
+    public void deleteMenu(Integer id);
 }

@@ -57,8 +57,9 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public void insertMenu(MenuDto menuDto) {
+        System.out.println(menuDto);
         menuRepository.save(globalMapper.menuDtoToMenu(menuDto));
-    
+        menuHandler.refreshMenuData();
     }
 
     @Override
@@ -71,11 +72,15 @@ public class MenuServiceImpl implements MenuService {
         menu.setUpperMenu(menuDto.getUpperMenu());
         menu.setUsage(menuDto.getUsage());
         menu.setOrder(menuDto.getOrder());
+        menuRepository.save(menu);
+        menuHandler.refreshMenuData();
     }
 
     @Override
-    public void deleteMenu(MenuDto menuDto) {
-        menuRepository.deleteById(globalMapper.menuDtoToMenu(menuDto).getId());
+    @Transactional
+    public void deleteMenu(Integer id) {
+        menuRepository.deleteById(id);
+        menuHandler.refreshMenuData();
     }
 
     private MenuDto recursiveMenus(MenuDto menuDto){

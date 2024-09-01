@@ -12,13 +12,14 @@ import com.youn.vista.global.menu.repository.MenuRepository;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.Synchronized;
 
 @Component
 @RequiredArgsConstructor
 public class MenuHandler {
 
     private final MenuRepository menuRepository;
-    private List<Menu> menuCache;
+    private volatile List<Menu> menuCache;
 
     @PostConstruct
     public void init() {
@@ -26,7 +27,7 @@ public class MenuHandler {
        
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional()
     public void loadMenuData() {
         menuCache = menuRepository.findAll(); // 모든 메뉴를 로드
     }

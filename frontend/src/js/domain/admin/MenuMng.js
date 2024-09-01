@@ -11,6 +11,7 @@ const  MenuMng = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [editData, setEditData] = useState(null);
 
   const fetchAllMenuInfo = async () => {
     setError(null);
@@ -29,8 +30,14 @@ const  MenuMng = () => {
   }, []); 
 
   const openModal = () => {
+    setEditData(null)
     setModalIsOpen(true);
   };
+  const handleEdit = (rowData) => {
+    setEditData(rowData)
+    setModalIsOpen(true)
+  };
+  
   return (
     <div className='table_area' >
         <fieldset>
@@ -40,13 +47,13 @@ const  MenuMng = () => {
               <button onClick={openModal} className="open-modal-button">메뉴생성</button>
             </label>
         </fieldset>
-        <MenuTable error={error} loading={loading} data={data}/>
-        <CreateMenuModal modalIsOpen={modalIsOpen} setModalIsOpen={setModalIsOpen} />
+        <MenuTable error={error} loading={loading} data={data} onEdit={handleEdit}/>
+        <CreateMenuModal modalIsOpen={modalIsOpen} setModalIsOpen={setModalIsOpen} editData={editData} />
     </div>
   )
 }
 
-const  MenuTable = ({error,loading,data}) => {
+const  MenuTable = ({error,loading,data, onEdit}) => {
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error.message}</p>;
@@ -94,7 +101,7 @@ const  MenuTable = ({error,loading,data}) => {
           Cell: ({ row }) => (
               <div>
                   <button
-                      onClick={() => handleEdit(row.original)}
+                      onClick={() => onEdit(row.original)}
                   >
                       Edit
                   </button>
@@ -108,30 +115,56 @@ const  MenuTable = ({error,loading,data}) => {
         }
       ];
     return (
-      <Table columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
+      <Table columns={columns} data={data}  onDelete={handleDelete} />
     )
    
 }
 
-const handleEdit = (rowData) => {
-  console.log(rowData)
-};
 
-const handleDelete = (rowData) => {
-  // Delete 버튼 클릭 시의 동작을 정의합니다.
-  if (window.confirm(`Are you sure you want to delete ${JSON.stringify(rowData)}?`)) {
-      // Perform delete action
-      alert(`Deleted ${JSON.stringify(rowData)}`);
+const handleDelete =  async (rowData) => {
+  try {
+    console.log(rowData)
+    const response = await axios.delete(`/api/menu/${rowData.id}`);
+    if (response.status === 200) {
+      console.log('Menu deleted successfully');
+      window.location.reload();
+    } else {
+      console.error('Failed to delete menu',response);
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
   }
 };
 
-const CreateMenuModal = ({ modalIsOpen, setModalIsOpen }) => {
+const CreateMenuModal = ({ modalIsOpen, setModalIsOpen, editData}) => {
   const [menuName, setMenuName] = useState('');
   const [comment, setComment] = useState('');
   const [path, setPath] = useState('');
   const [upperMenu, setUpperMenu] = useState('');
   const [order, setOrder] = useState('');
-  const [isActive, setIsActive] = useState('true');
+  const [isActive, setIsActive] = useState(true);
+  const [id,setId] =useState('');
+
+  useEffect(()=>{
+    if(editData){
+      setId(editData.id || '');
+      setMenuName(editData.name || '');
+      setComment(editData.comment || '');
+      setPath(editData.path || '');
+      setUpperMenu(editData.upperMenu || '');
+      setOrder(editData.order || '');
+      setIsActive(editData.usage ? 'true' : 'false');
+    }
+    else{
+      setId('');
+      setMenuName('');
+      setComment('');
+      setPath('');
+      setUpperMenu('');
+      setOrder('');
+      setIsActive(true);
+    }
+  },[editData])  
 
   const closeModal = () => {
     setModalIsOpen(false);
@@ -142,6 +175,7 @@ const CreateMenuModal = ({ modalIsOpen, setModalIsOpen }) => {
 
     // 폼 데이터 준비
     const menuData = {
+      id:id,
       name:menuName,
       comment:comment,
       path :path,
@@ -151,13 +185,12 @@ const CreateMenuModal = ({ modalIsOpen, setModalIsOpen }) => {
     };
 
     try {
-      console.log(menuData)
-      // 서버에 요청 보내기
-      const response = await axios.post('/api/menu', menuData);
+      const response = editData?await axios.put('/api/menu', menuData) : await axios.post('/api/menu', menuData);
 
       if (response.status === 200) {
         console.log('Menu created successfully');
         closeModal(); 
+        window.location.reload();
       } else {
         console.error('Failed to create menu');
       }

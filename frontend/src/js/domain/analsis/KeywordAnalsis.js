@@ -38,11 +38,19 @@ const KeywordAnalsis = () => {
     const handleSearchChange = (event) => {
         setSearch(event.target.value);
     };
+
+
     
     const handelSubmit = (event) => {
         event.preventDefault();
         fetchData();
     };
+
+    const handleKeyDown =(event) =>{
+        if(event.key=='Enter'){
+            fetchData();
+        }
+    }
 
     const Content = () =>{
         if(loading) return <div>Loading..</div>;
@@ -74,6 +82,7 @@ const KeywordAnalsis = () => {
                     <input 
                         type='text'
                         value={search}
+                        onKeyDown={handleKeyDown}
                         onChange={handleSearchChange}
                     />
                 </label>

@@ -6,6 +6,7 @@ let menuList =[];
 try{
     const {data} = await axios.get(`/api/menu/use`);
     if(data) menuList =data;
+    console.log(menuList)
   
 } catch (err){
     console.log('메뉴정보를 가져오는데 실패하였습니다')

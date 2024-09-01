@@ -5,7 +5,7 @@ spring:
   application:
     name : 비스타 
   profiles:
-    active: company
+    active: home
   cache:
     type: simple
 logging: 
