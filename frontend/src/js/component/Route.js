@@ -13,9 +13,9 @@ const BasicPage = ()=>{
 
 const componentMap = {
     '/': BasicPage,
-    '/analsis/KeywordAnalsis': KeywordAnalsis,
-    '/analsis/MapAnalsis': MapAnalsis,
-    '/admin/MenuMng': MenuMng,
+    '/analsis/keywordAnalsis': KeywordAnalsis,
+    '/analsis/mapAnalsis': MapAnalsis,
+    '/admin/menuMng': MenuMng,
     // Add more mappings here
 };
 

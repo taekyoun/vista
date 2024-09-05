@@ -93,49 +93,9 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
     }
 
     @Override
-    @Cacheable("keywordData")
-    @Transactional
-    public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList) {
-        HashMap<String,String> wordSentimentMap = new HashMap<>();
-        wordSentimentRepository.findAll().forEach(wordSentiment->{
-            wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
-        });
-
-        List<KeywordDto> keywordList = newsList.stream()
-            .map(dto->webCrawling.start(dto.getLinkUrl(), dto))
-            .flatMap(newsDto-> keywordAnalyzer.analyze(newsDto.getContent())
-                .entrySet().stream()
-                .map(entry -> KeywordDto.builder()
-                    .originId(newsDto.getId())
-                    .keyword(entry.getKey())
-                    .count(entry.getValue())
-                    .build())
-            )
-            .map(keywordDto -> {
-                String sentimentCode = wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword");
-                switch (sentimentCode) {
-                    case "DIC02":
-                        keywordDto.setSentiment("긍정");
-                        break;
-                    case "DIC03":
-                        keywordDto.setSentiment("부정");
-                        break;
-                    default:
-                        keywordDto.setSentiment(sentimentCode);
-                        break;
-                }
-                return keywordDto;
-            })
-            .filter(dto -> !"DIC01".equals(dto.getSentiment()))
-            .toList();
-        
-        return  keywordList;
-    }
-
-    @Override
     @Transactional
     @Cacheable("keywordData")
-    public List<KeywordDto> processKeywordsAsync(List<NewsDto> newsList) {
+    public List<KeywordDto> getKeywordInfoList(List<NewsDto> newsList) {
         HashMap<String,String> wordSentimentMap = new HashMap<>();
         wordSentimentRepository.findAll().forEach(wordSentiment->{
             wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
@@ -187,6 +147,43 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
     public KeywordAnalsisDto getKeywordAnalsis() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getKeywordAnalsis'");
+    }
+
+    @Override
+    public List<KeywordDto> getKeywordInfo(String linkUrl,String description) {
+        HashMap<String,String> wordSentimentMap = new HashMap<>();
+        wordSentimentRepository.findAll().forEach(wordSentiment->{
+            wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
+        });
+        String html =webCrawling.fetchContent(linkUrl);
+        if(html.length()==0){
+            html = description;
+        }
+        List<KeywordDto> keywordDtoList = keywordAnalyzer.analyze(html).entrySet()
+            .stream()
+            .map(entry -> KeywordDto.builder()
+                .keyword(entry.getKey())
+                .count(entry.getValue())
+                .build())
+            .map(keywordDto -> {
+                String sentimentCode = wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword");
+                switch (sentimentCode) {
+                    case "DIC02":
+                        keywordDto.setSentiment("긍정");
+                        break;
+                    case "DIC03":
+                        keywordDto.setSentiment("부정");
+                        break;
+                    default:
+                        keywordDto.setSentiment(sentimentCode);
+                        break;
+                }
+                return keywordDto;
+            })
+            .filter(dto -> !"DIC01".equals(dto.getSentiment()))
+            .collect(Collectors.toList());
+         
+        return null;
     }  
 
 }

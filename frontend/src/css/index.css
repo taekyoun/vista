@@ -1,7 +1,15 @@
+html, body {
+    height: 100%;
+}
 html *{
     padding: 0;
     margin: 0;
 }
+#root{
+    height: 100%;
+}
+
 .hidden{
     display: none;
 }
+

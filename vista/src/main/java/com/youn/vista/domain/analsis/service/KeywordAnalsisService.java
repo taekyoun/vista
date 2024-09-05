@@ -10,9 +10,9 @@ public interface KeywordAnalsisService {
 
     public List<NewsDto> getNewsData(String keyword, int count);
 
-    public List<KeywordDto> getKeywordInfo(List<NewsDto> newsList);
+    public List<KeywordDto> getKeywordInfo(String linkUrl,String description);
 
-    public List<KeywordDto> processKeywordsAsync(List<NewsDto> newsList);
+    public List<KeywordDto> getKeywordInfoList(List<NewsDto> newsList);
 
     public KeywordAnalsisDto getKeywordAnalsis();
 

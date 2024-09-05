@@ -28,7 +28,7 @@ public class KeywordAnalsisController {
     private final KeywordAnalsisService keywordAnalsisService;
 
     private enum SortType {
-        news, info
+        news, info, once
     }
 
     @Data
@@ -41,26 +41,29 @@ public class KeywordAnalsisController {
         @Min(1)
         @Max(100)
         private int count;
+
+        private String url;
+        private String description;
     }
     
 
     @GetMapping("/{sort}")
     public ResponseEntity<Object> getContent(@PathVariable("sort") SortType sort,@Valid @ModelAttribute Params params){
-        List<?> resultList = null;
-        List<NewsDto> newsList =keywordAnalsisService.getNewsData(params.getKeyword(),params.getCount());
+
         switch (sort) {
             case news:
-                resultList = newsList;
-                break;
+                return ResponseEntity.ok(keywordAnalsisService.getNewsData(params.getKeyword(),params.getCount()));
             case info:
-                resultList = keywordAnalsisService.processKeywordsAsync(newsList);
-                break;
+                List<NewsDto> newsList =keywordAnalsisService.getNewsData(params.getKeyword(),params.getCount());
+                return ResponseEntity.ok(keywordAnalsisService.getKeywordInfoList(newsList));
+            case once:
+                return ResponseEntity.ok(keywordAnalsisService.getKeywordInfo(params.getUrl(),params.getDescription()));
             default:
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                     .body("Invalid sort parameter");
         }
-       
-        return ResponseEntity.ok(resultList);
     }
+    
+ 
    
 }

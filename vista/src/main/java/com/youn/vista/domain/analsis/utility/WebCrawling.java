@@ -3,10 +3,13 @@ package com.youn.vista.domain.analsis.utility;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -24,13 +27,17 @@ public class WebCrawling<T> {
        
     }
 
+    @Retryable(
+    value = { RejectedExecutionException.class },
+    maxAttempts = 5,
+    backoff = @Backoff(delay = 1000))
     @Async("taskExecutor")
     public CompletableFuture<T> crawlNews(String url, T dto) {
         T newDto = start(url, dto); // 크롤링 작업
         return CompletableFuture.completedFuture(newDto);
     }
 
-    private String fetchContent(String url) {
+    public String fetchContent(String url) {
         try {
             Document document = Jsoup.connect(url)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")

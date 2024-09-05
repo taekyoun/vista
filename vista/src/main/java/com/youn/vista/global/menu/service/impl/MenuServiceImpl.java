@@ -1,6 +1,7 @@
 package com.youn.vista.global.menu.service.impl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class MenuServiceImpl implements MenuService {
                 topMenus = menuHandler.getMenuCache().stream()
                     .map(globalMapper::menuToMenuDto)
                     .filter(dto-> (dto.getUpperMenu()==null|| dto.getUpperMenu().isBlank()))
+                    .sorted(Comparator.comparingInt(MenuDto::getOrder))
                     .toList();
                 break;
             case "use":
@@ -38,12 +40,14 @@ public class MenuServiceImpl implements MenuService {
                 .map(globalMapper::menuToMenuDto)
                 .filter(MenuDto::getUsage)
                 .filter(dto-> (dto.getUpperMenu()==null|| dto.getUpperMenu().isBlank()))
+                .sorted(Comparator.comparingInt(MenuDto::getOrder))
                 .toList();
                 break;
             default:
                 topMenus = menuHandler.getMenuCache().stream()
                 .map(globalMapper::menuToMenuDto)
                 .filter(dto-> (dto.getUpperMenu()==null|| dto.getUpperMenu().isBlank()))
+                .sorted(Comparator.comparingInt(MenuDto::getOrder))
                 .toList();
         }
         List<MenuDto> hierarchyMenuList = new ArrayList<>();
@@ -88,6 +92,7 @@ public class MenuServiceImpl implements MenuService {
             .map(globalMapper::menuToMenuDto)
             .filter(dto->(dto.getUpperMenu()!=null && !dto.getUpperMenu().isBlank()))
             .filter(dto->dto.getUpperMenu().equals(menuDto.getName()))
+            .sorted(Comparator.comparingInt(MenuDto::getOrder))
             .toList();
         if(subMenus.size()>0){
             List<MenuDto> subMenuDtos = new ArrayList<>();

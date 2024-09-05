@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.youn.vista.global.menu.entity.Menu;
@@ -12,7 +11,6 @@ import com.youn.vista.global.menu.repository.MenuRepository;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.Synchronized;
 
 @Component
 @RequiredArgsConstructor

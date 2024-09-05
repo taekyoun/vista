@@ -1,26 +1,31 @@
 .header{
     height: 180px;
-    background-color: aqua;
+    background: linear-gradient(to bottom, #A0D3E8, #5BB3E6);
 }
 
 .nav{
     padding: 0px 10px;
     height: 40px;
-    background-color: bisque;
     display: flex;
-    font-size: 24px;
+    position: fixed;
+    top: 10px;
+    right: 50px;
+    
 }
 .nav *{
     text-decoration: none;
-    z-index: 1000;
+    z-index: 1000;  
 }
 .content_body{
-    min-height: 500px;
-    background-color: aquamarine;
+    background-image: url(../../img/main-bg.jpg);
+    background-size: cover;
+    min-height: 1000px;
+    background-size: 100% 150%; /* 너비 50%, 높이 50% */
+    padding: 30px 50px;
 }
 .footer{
-    height: 100px;
-    background-color: black;
+    height: 200px;
+    background-color: antiquewhite;
 }
 
 .nav .menu_item {
@@ -31,4 +36,10 @@
 .nav .menu_item *{
     list-style: none;
     gap: 30px;
+    width: 50px;
+    white-space: nowrap;
+    font-size: 16px;
+}
+.nav .menu_item li div ul a {
+    font-size: 12px;
 }

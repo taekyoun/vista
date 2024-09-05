@@ -8,7 +8,6 @@ const Table = ({ columns, data}) => {
         headerGroups,
         rows,
         prepareRow,
-        state: { expanded },
     } = useTable(
         {
             columns,

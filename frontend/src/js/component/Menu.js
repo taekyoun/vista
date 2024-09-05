@@ -15,7 +15,7 @@ try{
 const findPageTitle = (menus, currentPath) => {
     for (const menu of menus) {
         if (menu.path === currentPath) {
-            return menu.title;
+            return menu.name;
         }
         if (menu.subMenu) {
             const foundTitle = findPageTitle(menu.subMenu, currentPath);
@@ -30,7 +30,6 @@ const findPageTitle = (menus, currentPath) => {
 const PageTitle = () => {
     const location = useLocation();
     const currentPath = location.pathname;
- 
     // 현재 경로에 맞는 제목 찾기
     const pageTitle = findPageTitle(menuList, currentPath) 
     return <h1>{pageTitle}</h1>;
