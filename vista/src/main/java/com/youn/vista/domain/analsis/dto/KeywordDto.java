@@ -10,5 +10,6 @@ public class KeywordDto {
     String originId;
     String keyword;
     Long count;
-    String sentiment;
+    @Builder.Default
+    String sentiment = "common";
 }

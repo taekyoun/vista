@@ -55,7 +55,7 @@ public class KeywordAnalsisController {
                 return ResponseEntity.ok(keywordAnalsisService.getNewsData(params.getKeyword(),params.getCount()));
             case info:
                 List<NewsDto> newsList =keywordAnalsisService.getNewsData(params.getKeyword(),params.getCount());
-                return ResponseEntity.ok(keywordAnalsisService.getKeywordInfoList(newsList));
+                return ResponseEntity.ok(keywordAnalsisService.getKeywordAnalsis(newsList));
             case once:
                 return ResponseEntity.ok(keywordAnalsisService.getKeywordInfo(params.getUrl(),params.getDescription()));
             default:

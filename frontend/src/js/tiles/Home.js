@@ -1,7 +1,6 @@
 import React, { Suspense} from 'react';
 import { Link } from 'react-router-dom';
-import {Menu, PageTitle} from 'js/component/Menu';
-import ComponentRoute from 'js/component/Route';
+import {Menu} from 'js/component/Menu';
 import style from 'css/tiles/Portal.module.css'
 
 const Home = ()=> {

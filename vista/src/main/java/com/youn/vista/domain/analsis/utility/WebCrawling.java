@@ -47,7 +47,7 @@ public class WebCrawling<T> {
             return articleContent.text().replaceAll("[^\\uac00-\\ud7af]", " ");
             
         } catch (IOException  crawringExc) {
-            System.out.println(crawringExc.getMessage());
+            System.out.println("crawringError : "+crawringExc.getMessage());
             return "";
         }
     }

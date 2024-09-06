@@ -5,7 +5,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -25,6 +28,7 @@ import com.google.gson.JsonParser;
 import com.youn.vista.domain.analsis.dto.KeywordAnalsisDto;
 import com.youn.vista.domain.analsis.dto.KeywordDto;
 import com.youn.vista.domain.analsis.dto.NewsDto;
+import com.youn.vista.domain.analsis.dto.SentimentDto;
 import com.youn.vista.domain.analsis.repository.WordSentimentRepository;
 import com.youn.vista.domain.analsis.service.KeywordAnalsisService;
 import com.youn.vista.domain.analsis.utility.KeywordAnalyzer;
@@ -144,13 +148,35 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
     }
 
     @Override
-    public KeywordAnalsisDto getKeywordAnalsis() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getKeywordAnalsis'");
+    @Transactional
+    @Cacheable("keywordData")
+    public List<KeywordAnalsisDto> getKeywordAnalsis(List<NewsDto> newsList) {
+        List<KeywordDto> keywordList = getKeywordInfoList(newsList);
+        Map<String,List<KeywordDto>> groupKeyword = keywordList.stream().collect(Collectors.groupingBy(KeywordDto::getKeyword));
+        //Map<String,Integer> keywordCntMap = new HashMap<>();
+        List<KeywordAnalsisDto> keywordAnalsisList = new ArrayList<>();
+        groupKeyword.forEach((key,list)->{
+            Long cnt =0L;
+            Set<String> originIdList = new HashSet<>();
+            for(KeywordDto dto :list){
+                cnt +=dto.getCount();
+                originIdList.add(dto.getOriginId());
+            }
+            keywordAnalsisList.add(
+                KeywordAnalsisDto.builder()
+                    .originIdList(originIdList)
+                    .keyword(key)
+                    .count(cnt)
+                    .sentiment(list.get(0).getSentiment())
+                    .build());
+            //keywordCntMap.put(key, cnt);
+        });
+        return keywordAnalsisList;
     }
 
     @Override
-    public List<KeywordDto> getKeywordInfo(String linkUrl,String description) {
+    public SentimentDto getKeywordInfo(String linkUrl,String description) {
+        int[] countArr = new int[3];
         HashMap<String,String> wordSentimentMap = new HashMap<>();
         wordSentimentRepository.findAll().forEach(wordSentiment->{
             wordSentimentMap.put(wordSentiment.getWord(), wordSentiment.getSentiment());
@@ -159,31 +185,28 @@ public class KeywordAnalsisServiceImpl implements KeywordAnalsisService{
         if(html.length()==0){
             html = description;
         }
-        List<KeywordDto> keywordDtoList = keywordAnalyzer.analyze(html).entrySet()
+        keywordAnalyzer.analyze(html).entrySet()
             .stream()
             .map(entry -> KeywordDto.builder()
                 .keyword(entry.getKey())
                 .count(entry.getValue())
                 .build())
             .map(keywordDto -> {
-                String sentimentCode = wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword");
-                switch (sentimentCode) {
-                    case "DIC02":
-                        keywordDto.setSentiment("긍정");
-                        break;
-                    case "DIC03":
-                        keywordDto.setSentiment("부정");
-                        break;
-                    default:
-                        keywordDto.setSentiment(sentimentCode);
-                        break;
-                }
+                keywordDto.setSentiment(wordSentimentMap.getOrDefault(keywordDto.getKeyword(), "keyword"));
                 return keywordDto;
             })
-            .filter(dto -> !"DIC01".equals(dto.getSentiment()))
-            .collect(Collectors.toList());
-         
-        return null;
+            .filter(keywordDto -> !"DIC01".equals(keywordDto.getSentiment()))
+            .forEach(keywordDto->{
+                if(keywordDto.getSentiment().equals("DIC02")) countArr[0]++;
+                else if(keywordDto.getSentiment().equals("DIC03")) countArr[1]++;
+                else countArr[2]++;
+            });
+     
+        return SentimentDto.builder()
+            .positiveCnt(countArr[0])
+            .negativeCnt(countArr[1])
+            .restCnt(countArr[2])
+            .build();
     }  
 
 }

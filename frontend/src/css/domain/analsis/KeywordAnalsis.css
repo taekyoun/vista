@@ -34,7 +34,6 @@
     background-color: #f4f4f4; 
     z-index: 1; 
     text-align: center;
-    border: 1px solid gainsboro;
     padding: 8px; 
     box-sizing: border-box;
     white-space: nowrap;
@@ -81,4 +80,9 @@
     visibility: visible;
 }
 
-
+.keyword_top10{
+    display: flex;
+}
+.keyword_top10 ul{
+    margin: 20px;
+}

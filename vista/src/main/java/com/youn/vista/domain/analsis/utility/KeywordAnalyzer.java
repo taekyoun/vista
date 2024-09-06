@@ -36,12 +36,17 @@ public class KeywordAnalyzer {
         return this.komoran;
     }
 
+    public String textClean(String text){
+        return text.replaceAll("[^가-힣a-zA-Z0-9\\s]+|\\s+", " ").trim();
+    }
+
     public Map<String,Long> analyze(String text){
         return this.komoran
-            .analyze(text)
+            .analyze(textClean(text))
             .getTokenList()
             .stream()
             .filter(token -> "NNG".equals(token.getPos()))
+            .filter(token -> token.getMorph().length()>1)
             .collect(Collectors.groupingBy(Token::getMorph, Collectors.counting()));
             
     }
