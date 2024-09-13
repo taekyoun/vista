@@ -6,7 +6,7 @@ const Loading = ()=>{
 }
 const Error = ({error})=>{
     return (
-        <div>에러 발생 :{error}</div>
+        <div>에러 발생 :{error.message}</div>
     )
 }
 const Vacuum = () =>{

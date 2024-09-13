@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTable, useExpanded  } from 'react-table';
 import style from 'css/component/Table.module.css'
-const Table = ({ columns, data}) => {
+const Table = ({ columns, data, onRowClick}) => {
     const {
         getTableProps,
         getTableBodyProps,
@@ -34,7 +34,7 @@ const Table = ({ columns, data}) => {
                     prepareRow(row);
                     return (
                         <React.Fragment  key={rowIndex}>
-                            <tr {...row.getRowProps()} className={style.table_row}  key={rowIndex} >
+                            <tr {...row.getRowProps()} className={style.table_row}  key={rowIndex}   onClick={onRowClick ? () => onRowClick(row.original) : null} >
                                 {row.cells.map((cell,cellIndex) => 
                                     (
                                         <td {...cell.getCellProps()} className={`${style.table_cell} ${cell.column.className || ''}`} key={cellIndex}>

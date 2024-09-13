@@ -1,9 +1,11 @@
-package com.youn.vista.global.utility.mapper;
+package com.youn.vista.utility.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.youn.vista.global.auth.dto.UserDto;
+import com.youn.vista.global.auth.entity.UserEntity;
 import com.youn.vista.global.menu.dto.MenuDto;
 import com.youn.vista.global.menu.entity.Menu;
 
@@ -14,4 +16,6 @@ public interface GlobalMapper {
 
     @Mapping(target = "subMenu",ignore = true)
     public MenuDto menuToMenuDto(Menu menu);
+
+    public UserEntity userDtoToUserEntity(UserDto userDto);
 }

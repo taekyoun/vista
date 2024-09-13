@@ -42,7 +42,8 @@ public class WebCrawling<T> {
             Document document = Jsoup.connect(url)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
                 .get();
-            Elements articleContent = document.select("body");
+            Elements articleContent = document.select("article");
+            if (articleContent.size()==0)articleContent= document.select("[class*='article']");
             
             return articleContent.text().replaceAll("[^\\uac00-\\ud7af]", " ");
             

@@ -4,6 +4,7 @@ import { Route, Routes,useLocation} from 'react-router-dom';
 const KeywordAnalsis = lazy(() => import  ('js/domain/analsis/KeywordAnalsis'));
 const MapAnalsis = lazy(() => import  ('js/domain/analsis/MapAnalsis'));
 const MenuMng = lazy(() => import  ('js/domain/admin/MenuMng'));
+const CodingBoard = lazy(()=> import ('js/domain/board/CodingBoard'));
 
 const BasicPage = ()=>{
     return (
@@ -15,6 +16,7 @@ const componentMap = {
     '/': BasicPage,
     '/analsis/keywordAnalsis': KeywordAnalsis,
     '/analsis/mapAnalsis': MapAnalsis,
+    '/board/coding': CodingBoard,
     '/admin/menuMng': MenuMng,
     // Add more mappings here
 };

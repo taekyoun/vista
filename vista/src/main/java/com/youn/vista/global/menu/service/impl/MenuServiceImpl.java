@@ -11,7 +11,7 @@ import com.youn.vista.global.menu.dto.MenuDto;
 import com.youn.vista.global.menu.entity.Menu;
 import com.youn.vista.global.menu.repository.MenuRepository;
 import com.youn.vista.global.menu.service.MenuService;
-import com.youn.vista.global.utility.mapper.GlobalMapper;
+import com.youn.vista.utility.mapper.GlobalMapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

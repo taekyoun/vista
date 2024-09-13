@@ -28,9 +28,10 @@ const KeywordAnalsis = () => {
             } );
             if(selectedOption==='news')setNewsData(response.data);
             else if(selectedOption==='info')seKeywordtData(response.data);
-            setLoading(false);
         } catch (err){
             setError(err);
+        }
+        finally{
             setLoading(false);
         }
     };
